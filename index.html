@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>生鲜剩菜交易平台</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+body {
+  background: #f5f5f5;
+  padding: 20px;
+}
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px #00000010;
+}
+.title {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+}
+.role-box {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+.role-btn {
+  padding: 14px 30px;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.buyer { background: #ff4400; color: white; }
+.seller { background: #00bfff; color: white; }
+.page {
+  display: none;
+}
+.page.active {
+  display: block;
+}
+.form-group {
+  margin-bottom: 16px;
+}
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+input, textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+.btn {
+  background: #1677ff;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.goods-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+.goods-item {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 14px;
+}
+.goods-item h4 {
+  margin-bottom: 6px;
+}
+.sold-out {
+  color: red;
+  font-weight: bold;
+}
+.edit-btn {
+  background: #ffa500;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  margin-top: 8px;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+  <h1 class="title">生鲜剩菜交易平台</h1>
+
+  <div class="role-box">
+    <button class="role-btn buyer" onclick="showPage('buyer')">我是买家</button>
+    <button class="role-btn seller" onclick="showPage('seller')">我是卖家</button>
+  </div>
+
+  <!-- 买家页面 -->
+  <div id="buyerPage" class="page">
+    <h2>买家 - 商品列表</h2>
+    <div class="goods-list" id="buyerGoodsList"></div>
+  </div>
+
+  <!-- 卖家页面 -->
+  <div id="sellerPage" class="page">
+    <h2>卖家 - 发布/管理商品</h2>
+
+    <div class="form-group">
+      <label>物品名称</label>
+      <input id="goodsName" placeholder="例如：剩菜套餐/水果/生鲜">
+    </div>
+    <div class="form-group">
+      <label>价格（元）</label>
+      <input id="goodsPrice" type="number" step="0.01">
+    </div>
+    <div class="form-group">
+      <label>库存数量</label>
+      <input id="goodsStock" type="number">
+    </div>
+    <button class="btn" onclick="addGoods()">发布商品</button>
+
+    <div style="margin-top:30px;">
+      <h3>我的商品</h3>
+      <div class="goods-list" id="sellerGoodsList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let goodsList = [];
+let currentEditIndex = null;
+
+// 切换页面
+function showPage(role) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  if (role === 'buyer') document.getElementById('buyerPage').classList.add('active');
+  if (role === 'seller') document.getElementById('sellerPage').classList.add('active');
+  renderGoods();
+}
+
+// 发布/修改商品
+function addGoods() {
+  const name = document.getElementById('goodsName').value;
+  const price = parseFloat(document.getElementById('goodsPrice').value) || 0;
+  const stock = parseInt(document.getElementById('goodsStock').value) || 0;
+
+  if (!name || price <= 0 || stock < 0) {
+    alert('请填写完整信息');
+    return;
+  }
+
+  const goods = { name, price, stock };
+
+  if (currentEditIndex !== null) {
+    goodsList[currentEditIndex] = goods;
+    currentEditIndex = null;
+  } else {
+    goodsList.push(goods);
+  }
+
+  document.getElementById('goodsName').value = '';
+  document.getElementById('goodsPrice').value = '';
+  document.getElementById('goodsStock').value = '';
+  renderGoods();
+}
+
+// 渲染商品
+function renderGoods() {
+  const buyerEl = document.getElementById('buyerGoodsList');
+  const sellerEl = document.getElementById('sellerGoodsList');
+
+  buyerEl.innerHTML = '';
+  sellerEl.innerHTML = '';
+
+  goodsList.forEach((item, index) => {
+    // 买家卡片
+    const buyerCard = document.createElement('div');
+    buyerCard.className = 'goods-item';
+    buyerCard.innerHTML = `
+      <h4>${item.name}</h4>
+      <div>价格：${item.price.toFixed(2)}元</div>
+      <div>库存：${item.stock}</div>
+      ${item.stock <= 0 ? '<div class="sold-out">已售罄</div>' : ''}
+    `;
+    buyerEl.appendChild(buyerCard);
+
+    // 卖家卡片
+    const sellerCard = document.createElement('div');
+    sellerCard.className = 'goods-item';
+    sellerCard.innerHTML = `
+      <h4>${item.name}</h4>
+      <div>价格：${item.price.toFixed(2)}元</div>
+      <div>库存：${item.stock}</div>
+      ${item.stock <= 0 ? '<div class="sold-out">已售罄</div>' : ''}
+      <button class="edit-btn" onclick="editGoods(${index})">修改</button>
+    `;
+    sellerEl.appendChild(sellerCard);
+  });
+}
+
+// 编辑商品
+function editGoods(index) {
+  const item = goodsList[index];
+  document.getElementById('goodsName').value = item.name;
+  document.getElementById('goodsPrice').value = item.price;
+  document.getElementById('goodsStock').value = item.stock;
+  currentEditIndex = index;
+}
+</script>
+</body>
+</html>
