@@ -175,7 +175,7 @@
             font-size: 14px;
             margin: 10px 0;
         }
-        .cart-btn, .edit-btn {
+        .cart-btn, .edit-btn, .del-btn {
             width: 100%;
             padding: 12px;
             border: none;
@@ -191,6 +191,9 @@
         }
         .edit-btn {
             background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+        }
+        .del-btn {
+            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
         }
         .cart-item, .order-item {
             padding: 20px;
@@ -252,7 +255,6 @@
             color: #5B21B6;
             font-weight: 600;
         }
-        /* 扫码支付弹窗 */
         .pay-modal {
             position: fixed;
             top: 0;
@@ -375,7 +377,6 @@
         <div class="modal-content">
             <h2>微信/支付宝扫码付款</h2>
             <p>支付完成后点击「已支付」</p>
-            <!-- 👇👇👇 这里替换成你的收款码图片链接 👇👇👇 -->
             <img class="qr-code" src="https://picsum.photos/220/220" alt="收款二维码">
             <button class="confirm-pay-btn" onclick="finishPay()">已完成支付</button>
         </div>
@@ -383,7 +384,7 @@
 </div>
 
 <script>
-// 全局数据存储（同一设备下所有用户共享）
+// 全局数据存储
 let allGoods = JSON.parse(localStorage.getItem('GLOBAL_GOODS')) || [];
 let allOrders = JSON.parse(localStorage.getItem('GLOBAL_ORDERS')) || [];
 let currentSeller = '';
@@ -451,6 +452,15 @@ function editGoods(index) {
     editGoodsIndex = index;
 }
 
+// ========== 新增：删除商品功能 ==========
+function deleteGoods(index) {
+    if(!confirm('确定要删除该商品吗？删除后将无法恢复！')) return;
+    allGoods.splice(index, 1);
+    saveGlobalData();
+    renderSellerData();
+    renderBuyerGoods();
+}
+
 // 买家加入购物车
 function addToCart(index) {
     const goods = allGoods[index];
@@ -477,13 +487,11 @@ function renderCart() {
     document.getElementById('totalMoney').innerText = total.toFixed(2);
 }
 
-// 显示支付二维码
+// 支付相关
 function showPayQr() {
     if (cart.length === 0) { alert('购物车为空'); return; }
     document.getElementById('payModal').style.display = 'flex';
 }
-
-// 完成支付（同步订单+库存）
 function finishPay() {
     cart.forEach(item => {
         const goods = allGoods[item.goodsIndex];
@@ -504,13 +512,13 @@ function finishPay() {
     goBuyer();
 }
 
-// 全局数据保存
+// 数据保存
 function saveGlobalData() {
     localStorage.setItem('GLOBAL_GOODS', JSON.stringify(allGoods));
     localStorage.setItem('GLOBAL_ORDERS', JSON.stringify(allOrders));
 }
 
-// 渲染买家商品列表
+// 渲染买家商品
 function renderBuyerGoods() {
     const el = document.getElementById('buyerGoodsList');
     el.innerHTML = '';
@@ -528,7 +536,7 @@ function renderBuyerGoods() {
     });
 }
 
-// 渲染卖家商品+订单
+// 渲染卖家数据
 function renderSellerData() {
     renderSellerGoods();
     renderSellerOrders();
@@ -546,6 +554,7 @@ function renderSellerGoods() {
                     <div class="stock">库存：${g.stock}｜销量：${g.sales}</div>
                     ${g.stock <= 0 ? '<p class="sold-out">❌ 已售罄</p>' : ''}
                     <button class="edit-btn" onclick="editGoods(${i})">修改商品</button>
+                    <button class="del-btn" onclick="deleteGoods(${i})">删除商品</button>
                 </div>
             `;
         }
