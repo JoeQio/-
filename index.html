@@ -1,27 +1,21 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>轻奢生鲜交易平台</title>
+    <title>生鲜剩菜交易平台</title>
     <style>
-        /* 全局重置 + 高级字体 */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
         }
-
         body {
             background: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%);
             min-height: 100vh;
             padding: 20px;
-            line-height: 1.6;
         }
-
-        /* 主容器 */
         .container {
             max-width: 1100px;
             margin: 0 auto;
@@ -29,20 +23,14 @@
             border-radius: 24px;
             box-shadow: 0 20px 60px rgba(124, 58, 237, 0.1);
             padding: 40px;
-            overflow: hidden;
         }
-
-        /* 标题样式 */
         .title {
             text-align: center;
             color: #5B21B6;
             margin-bottom: 40px;
             font-size: 32px;
             font-weight: 800;
-            letter-spacing: 1px;
         }
-
-        /* 页面切换 */
         .page {
             display: none;
             animation: fadeIn 0.4s ease forwards;
@@ -54,8 +42,6 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        /* 首页角色按钮 */
         .role-home {
             display: flex;
             gap: 30px;
@@ -86,8 +72,6 @@
             transform: translateY(-5px);
             box-shadow: 0 12px 35px rgba(124, 58, 237, 0.35);
         }
-
-        /* 返回按钮 */
         .back-btn {
             padding: 10px 20px;
             background: #6B7280;
@@ -103,8 +87,6 @@
         .back-btn:hover {
             background: #4B5563;
         }
-
-        /* 登录/表单卡片 */
         .seller-login, .form-card {
             max-width: 480px;
             margin: 0 auto;
@@ -136,8 +118,6 @@
             border-color: #7C3AED;
             box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
         }
-
-        /* 主按钮 */
         .submit-btn {
             width: 100%;
             padding: 15px;
@@ -155,23 +135,18 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(124, 58, 237, 0.3);
         }
-
-        /* 商品网格布局 */
         .goods-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
             gap: 25px;
             margin-top: 25px;
         }
-
-        /* 商品卡片（核心高级感） */
         .goods-card {
             background: white;
             border-radius: 20px;
             padding: 25px;
             box-shadow: 0 8px 25px rgba(124, 58, 237, 0.08);
             transition: all 0.3s ease;
-            border: none;
         }
         .goods-card:hover {
             transform: translateY(-8px);
@@ -200,9 +175,7 @@
             font-size: 14px;
             margin: 10px 0;
         }
-
-        /* 卡片按钮 */
-        .buy-btn, .edit-btn, .cart-btn {
+        .cart-btn, .edit-btn {
             width: 100%;
             padding: 12px;
             border: none;
@@ -219,15 +192,6 @@
         .edit-btn {
             background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
         }
-        .buy-btn {
-            background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%);
-        }
-        .goods-card button:hover {
-            opacity: 0.9;
-            transform: scale(1.02);
-        }
-
-        /* 购物车 & 订单样式 */
         .cart-item, .order-item {
             padding: 20px;
             background: #FAF5FF;
@@ -244,8 +208,6 @@
             color: #6B7280;
             font-size: 13px;
         }
-
-        /* 支付按钮 */
         .pay-btn {
             padding: 18px 40px;
             background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
@@ -263,16 +225,12 @@
             transform: translateY(-3px);
             box-shadow: 0 10px 30px rgba(124, 58, 237, 0.35);
         }
-
-        /* 提示文字 */
         .tip {
             color: #9CA3AF;
             margin: 15px 0;
             text-align: center;
             font-size: 13px;
         }
-
-        /* 标题层级 */
         h2 {
             color: #5B21B6;
             margin-bottom: 20px;
@@ -285,8 +243,6 @@
             font-size: 20px;
             font-weight: 700;
         }
-
-        /* 卖家统计 */
         .stats {
             background: #FAF5FF;
             padding: 20px;
@@ -296,14 +252,50 @@
             color: #5B21B6;
             font-weight: 600;
         }
+        /* 扫码支付弹窗 */
+        .pay-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+        }
+        .qr-code {
+            width: 220px;
+            height: 220px;
+            margin: 20px auto;
+            border-radius: 12px;
+        }
+        .confirm-pay-btn {
+            background: #10B981;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1 class="title">轻奢生鲜交易平台</h1>
+    <h1 class="title">生鲜剩菜交易平台</h1>
 
-    <!-- 首页：选择角色 -->
+    <!-- 首页角色选择 -->
     <div id="homePage" class="page active">
         <div class="role-home">
             <button class="role-btn btn-buyer" onclick="goBuyer()">我是买家</button>
@@ -311,7 +303,7 @@
         </div>
     </div>
 
-    <!-- 卖家登录页 -->
+    <!-- 卖家登录 -->
     <div id="sellerLoginPage" class="page">
         <button class="back-btn" onclick="goHome()">返回首页</button>
         <div class="seller-login">
@@ -321,7 +313,7 @@
                 <input id="sellerName" placeholder="输入您的专属用户名">
             </div>
             <button class="submit-btn" onclick="sellerLogin()">登录/注册</button>
-            <p class="tip">无需密码，用户名即为您的身份标识</p>
+            <p class="tip">无需密码，用户名即为身份标识</p>
         </div>
     </div>
 
@@ -358,10 +350,10 @@
         <div id="sellerOrderList"></div>
     </div>
 
-    <!-- 买家市场 -->
+    <!-- 买家商城 -->
     <div id="buyerMarketPage" class="page">
         <button class="back-btn" onclick="goHome()">返回首页</button>
-        <h2>买家商城</h2>
+        <h2>全局商城</h2>
         <button class="cart-btn" onclick="goCart()" style="margin:15px 0; width:auto;">🛒 我的购物车</button>
         <div class="goods-grid" id="buyerGoodsList"></div>
     </div>
@@ -373,21 +365,35 @@
         <div id="cartList"></div>
         <div style="margin-top:30px;">
             <h3>合计金额：<span id="totalMoney" style="color:#DC2626; font-size:26px;">0</span> 元</h3>
-            <button class="pay-btn" onclick="mockPay()">✅ 模拟支付下单</button>
-            <p class="tip">纯模拟支付，无真实资金交易</p>
+            <button class="pay-btn" onclick="showPayQr()">扫码支付</button>
+            <p class="tip">扫码完成支付后，点击下方确认按钮</p>
+        </div>
+    </div>
+
+    <!-- 扫码支付弹窗 -->
+    <div class="pay-modal" id="payModal">
+        <div class="modal-content">
+            <h2>微信/支付宝扫码付款</h2>
+            <p>支付完成后点击「已支付」</p>
+            <!-- 👇👇👇 这里替换成你的收款码图片链接 👇👇👇 -->
+            <img class="qr-code" src="https://picsum.photos/220/220" alt="收款二维码">
+            <button class="confirm-pay-btn" onclick="finishPay()">已完成支付</button>
         </div>
     </div>
 </div>
 
 <script>
-// ===================== 全局数据（本地永久存储）=====================
-let allGoods = JSON.parse(localStorage.getItem('allGoods')) || [];
-let allOrders = JSON.parse(localStorage.getItem('allOrders')) || [];
+// 全局数据存储（同一设备下所有用户共享）
+let allGoods = JSON.parse(localStorage.getItem('GLOBAL_GOODS')) || [];
+let allOrders = JSON.parse(localStorage.getItem('GLOBAL_ORDERS')) || [];
 let currentSeller = '';
-let cart = JSON.parse(localStorage.getItem('cart')) || [];
+let cart = [];
 let editGoodsIndex = null;
 
-// ===================== 页面跳转 =====================
+// 页面切换
+function hideAllPages() {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+}
 function goHome() {
     hideAllPages();
     document.getElementById('homePage').classList.add('active');
@@ -406,21 +412,13 @@ function goSellerCenter() {
     document.getElementById('sellerCenterPage').classList.add('active');
     renderSellerData();
 }
-function goBuyerMarket() {
-    hideAllPages();
-    document.getElementById('buyerMarketPage').classList.add('active');
-    renderBuyerGoods();
-}
 function goCart() {
     hideAllPages();
     document.getElementById('cartPage').classList.add('active');
     renderCart();
 }
-function hideAllPages() {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-}
 
-// ===================== 卖家功能 =====================
+// 卖家登录
 function sellerLogin() {
     const name = document.getElementById('sellerName').value.trim();
     if (!name) { alert('请输入用户名'); return; }
@@ -429,27 +427,22 @@ function sellerLogin() {
     goSellerCenter();
 }
 
+// 发布/修改商品
 function publishGoods() {
     const name = document.getElementById('goodsName').value.trim();
     const price = parseFloat(document.getElementById('goodsPrice').value) || 0;
     const stock = parseInt(document.getElementById('goodsStock').value) || 0;
-
-    if (!name || price <= 0 || stock < 0) { alert('请填写完整有效的信息'); return; }
+    if (!name || price <= 0 || stock < 0) { alert('请填写完整有效信息'); return; }
 
     const goods = { seller: currentSeller, name, price, stock, sales: 0 };
-
-    if (editGoodsIndex !== null) {
-        allGoods[editGoodsIndex] = goods;
-        editGoodsIndex = null;
-    } else {
-        allGoods.push(goods);
-    }
-
-    saveData();
-    clearPublishForm();
+    editGoodsIndex !== null ? (allGoods[editGoodsIndex] = goods, editGoodsIndex = null) : allGoods.push(goods);
+    
+    saveGlobalData();
+    document.getElementById('goodsName').value = document.getElementById('goodsPrice').value = document.getElementById('goodsStock').value = '';
     renderSellerData();
 }
 
+// 编辑商品
 function editGoods(index) {
     const g = allGoods[index];
     document.getElementById('goodsName').value = g.name;
@@ -458,52 +451,45 @@ function editGoods(index) {
     editGoodsIndex = index;
 }
 
-function renderSellerData() {
-    renderSellerGoods();
-    renderSellerOrders();
-    calcTotalSales();
-}
-
-// ===================== 买家功能 =====================
+// 买家加入购物车
 function addToCart(index) {
     const goods = allGoods[index];
     if (goods.stock <= 0) { alert('商品已售罄'); return; }
-    
-    const cartItem = { ...goods, buyNum: 1, goodsIndex: index };
-    cart.push(cartItem);
-    saveCart();
+    cart.push({ ...goods, buyNum: 1, goodsIndex: index });
     alert('加入购物车成功！');
 }
 
+// 渲染购物车
 function renderCart() {
     const el = document.getElementById('cartList');
     let total = 0;
     el.innerHTML = '';
-
-    cart.forEach((item, i) => {
+    cart.forEach(item => {
         total += item.price * item.buyNum;
         el.innerHTML += `
             <div class="cart-item">
                 <h4>${item.name}</h4>
-                <p>单价：${item.price.toFixed(2)}元｜数量：${item.buyNum}</p>
+                <p>单价：${item.price.toFixed(2)}元 | 数量：${item.buyNum}</p>
                 <p>卖家：${item.seller}</p>
             </div>
         `;
     });
-
     document.getElementById('totalMoney').innerText = total.toFixed(2);
 }
 
-function mockPay() {
+// 显示支付二维码
+function showPayQr() {
     if (cart.length === 0) { alert('购物车为空'); return; }
-    
+    document.getElementById('payModal').style.display = 'flex';
+}
+
+// 完成支付（同步订单+库存）
+function finishPay() {
     cart.forEach(item => {
         const goods = allGoods[item.goodsIndex];
         goods.stock -= item.buyNum;
         goods.sales += item.buyNum;
-        
         allOrders.push({
-            buyer: '游客',
             seller: goods.seller,
             goodsName: goods.name,
             buyNum: item.buyNum,
@@ -511,29 +497,20 @@ function mockPay() {
             time: new Date().toLocaleString()
         });
     });
-
-    saveData();
+    saveGlobalData();
     cart = [];
-    saveCart();
-    alert('支付成功！订单已生成');
-    goBuyerMarket();
+    document.getElementById('payModal').style.display = 'none';
+    alert('支付成功！订单已同步');
+    goBuyer();
 }
 
-// ===================== 数据存储 =====================
-function saveData() {
-    localStorage.setItem('allGoods', JSON.stringify(allGoods));
-    localStorage.setItem('allOrders', JSON.stringify(allOrders));
-}
-function saveCart() {
-    localStorage.setItem('cart', JSON.stringify(cart));
-}
-function clearPublishForm() {
-    document.getElementById('goodsName').value = '';
-    document.getElementById('goodsPrice').value = '';
-    document.getElementById('goodsStock').value = '';
+// 全局数据保存
+function saveGlobalData() {
+    localStorage.setItem('GLOBAL_GOODS', JSON.stringify(allGoods));
+    localStorage.setItem('GLOBAL_ORDERS', JSON.stringify(allOrders));
 }
 
-// ===================== 渲染工具 =====================
+// 渲染买家商品列表
 function renderBuyerGoods() {
     const el = document.getElementById('buyerGoodsList');
     el.innerHTML = '';
@@ -551,6 +528,12 @@ function renderBuyerGoods() {
     });
 }
 
+// 渲染卖家商品+订单
+function renderSellerData() {
+    renderSellerGoods();
+    renderSellerOrders();
+    calcTotalSales();
+}
 function renderSellerGoods() {
     const el = document.getElementById('sellerGoodsList');
     el.innerHTML = '';
@@ -568,7 +551,6 @@ function renderSellerGoods() {
         }
     });
 }
-
 function renderSellerOrders() {
     const el = document.getElementById('sellerOrderList');
     el.innerHTML = '';
@@ -583,12 +565,14 @@ function renderSellerOrders() {
         }
     });
 }
-
 function calcTotalSales() {
     let total = 0;
     allGoods.forEach(g => { if (g.seller === currentSeller) total += g.sales; });
     document.getElementById('totalSales').innerText = total;
 }
+
+// 初始化
+goHome();
 </script>
 </body>
 </html>
