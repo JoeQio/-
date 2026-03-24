@@ -87,7 +87,7 @@
         .back-btn:hover {
             background: #4B5563;
         }
-        .seller-login, .form-card {
+        .auth-form, .form-card {
             max-width: 480px;
             margin: 0 auto;
             padding: 35px;
@@ -290,6 +290,39 @@
             cursor: pointer;
             margin-top: 20px;
         }
+        .auth-switch {
+            text-align: center;
+            margin-top: 20px;
+            color: #6B7280;
+        }
+        .auth-switch a {
+            color: #7C3AED;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+        .upload-qr {
+            margin: 15px 0;
+            padding: 10px;
+            border: 2px dashed #A78BFA;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .upload-qr:hover {
+            background: #FAF5FF;
+            border-color: #7C3AED;
+        }
+        .seller-qr-preview {
+            width: 120px;
+            height: 120px;
+            margin: 10px auto;
+            border-radius: 8px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -308,14 +341,49 @@
     <!-- 卖家登录 -->
     <div id="sellerLoginPage" class="page">
         <button class="back-btn" onclick="goHome()">返回首页</button>
-        <div class="seller-login">
+        <div class="auth-form">
             <h2 style="text-align:center; margin-bottom:25px;">卖家登录</h2>
             <div class="input-group">
-                <label>卖家用户名</label>
-                <input id="sellerName" placeholder="输入您的专属用户名">
+                <label>用户名</label>
+                <input id="loginUsername" placeholder="输入您的用户名">
             </div>
-            <button class="submit-btn" onclick="sellerLogin()">登录/注册</button>
-            <p class="tip">无需密码，用户名即为身份标识</p>
+            <div class="input-group">
+                <label>密码</label>
+                <input id="loginPassword" type="password" placeholder="输入您的密码">
+            </div>
+            <button class="submit-btn" onclick="sellerLogin()">登录</button>
+            <div class="auth-switch">
+                还没有账号？ <a onclick="goSellerRegister()">立即注册</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 卖家注册 -->
+    <div id="sellerRegisterPage" class="page">
+        <button class="back-btn" onclick="goHome()">返回首页</button>
+        <div class="auth-form">
+            <h2 style="text-align:center; margin-bottom:25px;">卖家注册</h2>
+            <div class="input-group">
+                <label>用户名</label>
+                <input id="regUsername" placeholder="设置您的用户名">
+            </div>
+            <div class="input-group">
+                <label>密码</label>
+                <input id="regPassword" type="password" placeholder="设置您的密码">
+            </div>
+            <div class="input-group">
+                <label>确认密码</label>
+                <input id="regPasswordConfirm" type="password" placeholder="再次输入密码">
+            </div>
+            <div class="upload-qr" onclick="document.getElementById('qrUpload').click()">
+                <p>点击上传您的微信收款码</p>
+                <input type="file" id="qrUpload" accept="image/*" style="display:none" onchange="previewQrCode(event)">
+            </div>
+            <img id="regQrPreview" class="seller-qr-preview" alt="收款码预览">
+            <button class="submit-btn" onclick="sellerRegister()">注册账号</button>
+            <div class="auth-switch">
+                已有账号？ <a onclick="goSellerLogin()">立即登录</a>
+            </div>
         </div>
     </div>
 
@@ -375,21 +443,23 @@
     <!-- 扫码支付弹窗 -->
     <div class="pay-modal" id="payModal">
         <div class="modal-content">
-            <h2>微信/支付宝扫码付款</h2>
+            <h2>微信扫码付款给：<span id="payToSeller"></span></h2>
             <p>支付完成后点击「已支付」</p>
-            <img class="qr-code" src="https://picsum.photos/220/220" alt="收款二维码">
+            <img class="qr-code" id="payQrCode" src="" alt="收款二维码">
             <button class="confirm-pay-btn" onclick="finishPay()">已完成支付</button>
         </div>
     </div>
 </div>
 
 <script>
-// 全局数据存储
+// 全局数据存储（同一设备下所有用户共享）
 let allGoods = JSON.parse(localStorage.getItem('GLOBAL_GOODS')) || [];
 let allOrders = JSON.parse(localStorage.getItem('GLOBAL_ORDERS')) || [];
-let currentSeller = '';
+let allSellers = JSON.parse(localStorage.getItem('ALL_SELLERS')) || []; // 卖家账号数据库
+let currentSeller = null; // 当前登录卖家对象
 let cart = [];
 let editGoodsIndex = null;
+let selectedSellerForPay = null; // 当前支付对应的卖家
 
 // 页面切换
 function hideAllPages() {
@@ -398,19 +468,25 @@ function hideAllPages() {
 function goHome() {
     hideAllPages();
     document.getElementById('homePage').classList.add('active');
+    currentSeller = null; // 退出登录
 }
 function goBuyer() {
     hideAllPages();
     document.getElementById('buyerMarketPage').classList.add('active');
-    renderBuyerGoods();
+    renderBuyerGoods(); // 每次进入都重新渲染，确保删除实时生效
 }
 function goSellerLogin() {
     hideAllPages();
     document.getElementById('sellerLoginPage').classList.add('active');
 }
+function goSellerRegister() {
+    hideAllPages();
+    document.getElementById('sellerRegisterPage').classList.add('active');
+}
 function goSellerCenter() {
     hideAllPages();
     document.getElementById('sellerCenterPage').classList.add('active');
+    document.getElementById('currentSeller').innerText = currentSeller.username;
     renderSellerData();
 }
 function goCart() {
@@ -418,55 +494,173 @@ function goCart() {
     document.getElementById('cartPage').classList.add('active');
     renderCart();
 }
+function goBuyerMarket() {
+    hideAllPages();
+    document.getElementById('buyerMarketPage').classList.add('active');
+    renderBuyerGoods(); // 实时渲染最新商品列表
+}
+
+// 卖家注册
+function sellerRegister() {
+    const username = document.getElementById('regUsername').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const confirmPwd = document.getElementById('regPasswordConfirm').value;
+    const qrFile = document.getElementById('qrUpload').files[0];
+    
+    // 验证
+    if (!username || !password || !confirmPwd) {
+        alert('请填写完整信息');
+        return;
+    }
+    if (password !== confirmPwd) {
+        alert('两次密码不一致');
+        return;
+    }
+    if (!qrFile) {
+        alert('请上传微信收款码');
+        return;
+    }
+    if (allSellers.some(s => s.username === username)) {
+        alert('用户名已存在');
+        return;
+    }
+    
+    // 读取收款码图片
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        // 创建卖家账号
+        const newSeller = {
+            username,
+            password,
+            qrCode: e.target.result, // 收款码base64
+            sales: 0
+        };
+        allSellers.push(newSeller);
+        saveGlobalData();
+        
+        alert('注册成功！请登录');
+        goSellerLogin();
+        document.getElementById('qrUpload').value = '';
+        document.getElementById('regQrPreview').style.display = 'none';
+    };
+    reader.readAsDataURL(qrFile);
+}
 
 // 卖家登录
 function sellerLogin() {
-    const name = document.getElementById('sellerName').value.trim();
-    if (!name) { alert('请输入用户名'); return; }
-    currentSeller = name;
-    document.getElementById('currentSeller').innerText = name;
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    
+    const seller = allSellers.find(s => s.username === username && s.password === password);
+    if (!seller) {
+        alert('用户名或密码错误');
+        return;
+    }
+    
+    currentSeller = seller;
     goSellerCenter();
+}
+
+// 收款码预览
+function previewQrCode(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        const preview = document.getElementById('regQrPreview');
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
 }
 
 // 发布/修改商品
 function publishGoods() {
+    if (!currentSeller) {
+        alert('请先登录');
+        return;
+    }
+    
     const name = document.getElementById('goodsName').value.trim();
     const price = parseFloat(document.getElementById('goodsPrice').value) || 0;
     const stock = parseInt(document.getElementById('goodsStock').value) || 0;
-    if (!name || price <= 0 || stock < 0) { alert('请填写完整有效信息'); return; }
+    
+    if (!name || price <= 0 || stock < 0) {
+        alert('请填写完整有效信息');
+        return;
+    }
 
-    const goods = { seller: currentSeller, name, price, stock, sales: 0 };
-    editGoodsIndex !== null ? (allGoods[editGoodsIndex] = goods, editGoodsIndex = null) : allGoods.push(goods);
+    const goods = { 
+        sellerId: currentSeller.username, // 用用户名作为卖家ID
+        sellerName: currentSeller.username,
+        name, 
+        price, 
+        stock, 
+        sales: 0 
+    };
+    
+    editGoodsIndex !== null ? 
+        (allGoods[editGoodsIndex] = goods, editGoodsIndex = null) : 
+        allGoods.push(goods);
     
     saveGlobalData();
-    document.getElementById('goodsName').value = document.getElementById('goodsPrice').value = document.getElementById('goodsStock').value = '';
+    clearGoodsForm();
     renderSellerData();
+    renderBuyerGoods(); // 实时更新买家端商品列表
 }
 
 // 编辑商品
 function editGoods(index) {
     const g = allGoods[index];
+    if (g.sellerId !== currentSeller.username) {
+        alert('您只能编辑自己的商品');
+        return;
+    }
+    
     document.getElementById('goodsName').value = g.name;
     document.getElementById('goodsPrice').value = g.price;
     document.getElementById('goodsStock').value = g.stock;
     editGoodsIndex = index;
 }
 
-// ========== 新增：删除商品功能 ==========
+// 删除商品（卖家专属，删除后买家立即看不见）
 function deleteGoods(index) {
-    if(!confirm('确定要删除该商品吗？删除后将无法恢复！')) return;
-    allGoods.splice(index, 1);
-    saveGlobalData();
-    renderSellerData();
-    renderBuyerGoods();
+    const g = allGoods[index];
+    if (g.sellerId !== currentSeller.username) {
+        alert('您只能删除自己的商品');
+        return;
+    }
+    
+    if(confirm('确定要删除该商品吗？删除后买家将立即无法看到！')) {
+        allGoods.splice(index, 1); // 从数组中移除
+        saveGlobalData();
+        renderSellerData();
+        renderBuyerGoods(); // 实时更新买家端，立即看不见该商品
+    }
 }
 
 // 买家加入购物车
 function addToCart(index) {
     const goods = allGoods[index];
-    if (goods.stock <= 0) { alert('商品已售罄'); return; }
-    cart.push({ ...goods, buyNum: 1, goodsIndex: index });
+    if (goods.stock <= 0) {
+        alert('商品已售罄');
+        return;
+    }
+    
+    // 购物车中同一卖家商品合并（简单版）
+    const existingItemIndex = cart.findIndex(item => item.sellerId === goods.sellerId);
+    if (existingItemIndex >= 0) {
+        cart[existingItemIndex].buyNum += 1;
+    } else {
+        cart.push({ ...goods, buyNum: 1, goodsIndex: index });
+    }
+    
+    // 记录支付对应的卖家（这里简化为购物车中第一个卖家，实际项目需支持多卖家支付）
+    selectedSellerForPay = allSellers.find(s => s.username === goods.sellerId);
+    
     alert('加入购物车成功！');
+    renderCart();
 }
 
 // 渲染购物车
@@ -474,37 +668,57 @@ function renderCart() {
     const el = document.getElementById('cartList');
     let total = 0;
     el.innerHTML = '';
+    
     cart.forEach(item => {
         total += item.price * item.buyNum;
         el.innerHTML += `
             <div class="cart-item">
                 <h4>${item.name}</h4>
                 <p>单价：${item.price.toFixed(2)}元 | 数量：${item.buyNum}</p>
-                <p>卖家：${item.seller}</p>
+                <p>卖家：${item.sellerName}</p>
             </div>
         `;
     });
+    
     document.getElementById('totalMoney').innerText = total.toFixed(2);
 }
 
-// 支付相关
+// 显示支付二维码（对应卖家的收款码）
 function showPayQr() {
-    if (cart.length === 0) { alert('购物车为空'); return; }
+    if (cart.length === 0) {
+        alert('购物车为空');
+        return;
+    }
+    if (!selectedSellerForPay) {
+        alert('未找到对应的卖家信息');
+        return;
+    }
+    
+    document.getElementById('payToSeller').innerText = selectedSellerForPay.username;
+    document.getElementById('payQrCode').src = selectedSellerForPay.qrCode;
     document.getElementById('payModal').style.display = 'flex';
 }
+
+// 完成支付（同步订单+库存）
 function finishPay() {
     cart.forEach(item => {
         const goods = allGoods[item.goodsIndex];
         goods.stock -= item.buyNum;
         goods.sales += item.buyNum;
+        
+        // 更新卖家销量统计
+        const seller = allSellers.find(s => s.username === goods.sellerId);
+        if (seller) seller.sales += item.buyNum;
+        
         allOrders.push({
-            seller: goods.seller,
+            seller: goods.sellerName,
             goodsName: goods.name,
             buyNum: item.buyNum,
             money: (item.price * item.buyNum).toFixed(2),
             time: new Date().toLocaleString()
         });
     });
+    
     saveGlobalData();
     cart = [];
     document.getElementById('payModal').style.display = 'none';
@@ -512,25 +726,30 @@ function finishPay() {
     goBuyer();
 }
 
-// 数据保存
+// 数据保存（自动同步所有数据）
 function saveGlobalData() {
     localStorage.setItem('GLOBAL_GOODS', JSON.stringify(allGoods));
     localStorage.setItem('GLOBAL_ORDERS', JSON.stringify(allOrders));
+    localStorage.setItem('ALL_SELLERS', JSON.stringify(allSellers));
 }
 
-// 渲染买家商品
+// 渲染买家商品列表（每次调用都重新渲染，确保删除实时生效）
 function renderBuyerGoods() {
     const el = document.getElementById('buyerGoodsList');
     el.innerHTML = '';
+    
+    // 过滤掉已删除的商品（这里allGoods数组已实时更新）
     allGoods.forEach((g, i) => {
         el.innerHTML += `
             <div class="goods-card">
                 <h3>${g.name}</h3>
-                <p>卖家：${g.seller}</p>
+                <p>卖家：${g.sellerName}</p>
                 <div class="price">¥${g.price.toFixed(2)}</div>
                 <div class="stock">库存：${g.stock}</div>
                 ${g.stock <= 0 ? '<p class="sold-out">❌ 已售罄</p>' : ''}
-                <button class="cart-btn" onclick="addToCart(${i})">🛒 加入购物车</button>
+                <button class="cart-btn" onclick="addToCart(${i})" ${g.stock <= 0 ? 'disabled' : ''}>
+                    ${g.stock <= 0 ? '❌ 已售罄' : '🛒 加入购物车'}
+                </button>
             </div>
         `;
     });
@@ -542,11 +761,13 @@ function renderSellerData() {
     renderSellerOrders();
     calcTotalSales();
 }
+
 function renderSellerGoods() {
     const el = document.getElementById('sellerGoodsList');
     el.innerHTML = '';
+    
     allGoods.forEach((g, i) => {
-        if (g.seller === currentSeller) {
+        if (g.sellerId === currentSeller.username) {
             el.innerHTML += `
                 <div class="goods-card">
                     <h3>${g.name}</h3>
@@ -560,11 +781,13 @@ function renderSellerGoods() {
         }
     });
 }
+
 function renderSellerOrders() {
     const el = document.getElementById('sellerOrderList');
     el.innerHTML = '';
+    
     allOrders.forEach(o => {
-        if (o.seller === currentSeller) {
+        if (o.seller === currentSeller.username) {
             el.innerHTML += `
                 <div class="order-item">
                     <p>商品：${o.goodsName}｜数量：${o.buyNum}｜金额：${o.money}元</p>
@@ -574,14 +797,28 @@ function renderSellerOrders() {
         }
     });
 }
+
 function calcTotalSales() {
     let total = 0;
-    allGoods.forEach(g => { if (g.seller === currentSeller) total += g.sales; });
+    allGoods.forEach(g => {
+        if (g.sellerId === currentSeller.username) total += g.sales;
+    });
     document.getElementById('totalSales').innerText = total;
 }
 
-// 初始化
-goHome();
+// 辅助函数
+function clearGoodsForm() {
+    document.getElementById('goodsName').value = '';
+    document.getElementById('goodsPrice').value = '';
+    document.getElementById('goodsStock').value = '';
+}
+
+// 初始化：每次页面加载都确保渲染最新数据
+document.addEventListener('DOMContentLoaded', function() {
+    if (document.getElementById('buyerMarketPage').classList.contains('active')) {
+        renderBuyerGoods();
+    }
+});
 </script>
 </body>
 </html>
